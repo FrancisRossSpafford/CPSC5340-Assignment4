@@ -6,3 +6,9 @@
 //
 
 import Foundation
+
+struct UserModel {
+    let uid: String
+    let email: String?
+}
+

@@ -8,24 +8,26 @@
 //
 
 import SwiftUI
-import FirebaseAuth
 
 struct AuthenticationView: View {
+    @StateObject private var viewModel = AuthViewModel()
     @State private var email = ""
     @State private var password = ""
-    @State private var isSignedIn = false
-    @State private var errorMessage = ""
 
     var body: some View {
         VStack(spacing: 16) {
-            if isSignedIn {
-                Text("Welcome!").font(.title)
-                Text("Sign In Successful.").font(.subheadline)
-                Button("Log Out") {
-                    try? Auth.auth().signOut()
-                    isSignedIn = false
+            if let user = viewModel.user {
+                Text("Welcome!")
+                    .font(.title)
+                Text("Sign in successful.").font(.subheadline)
+                Text("User ID: \(user.email ?? "User")").font(.subheadline)
+                Text(user.uid).font(.footnote)
+                Button("Sign Out") {
+                    viewModel.signOut()
                 }
             } else {
+                Text("Firebase Authentication Demo")
+                    .font(.title)
                 TextField("Email", text: $email)
                     .autocapitalization(.none)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -33,34 +35,19 @@ struct AuthenticationView: View {
                     .textFieldStyle(RoundedBorderTextFieldStyle())
 
                 Button("Sign Up") {
-                    Auth.auth().createUser(withEmail: email, password: password) { result, error in
-                        if let error = error {
-                            errorMessage = error.localizedDescription
-                        } else {
-                            isSignedIn = true
-                        }
-                    }
+                    viewModel.signUp(email: email, password: password)
                 }
 
                 Button("Log In") {
-                    Auth.auth().signIn(withEmail: email, password: password) { result, error in
-                        if let error = error {
-                            errorMessage = error.localizedDescription
-                        } else {
-                            isSignedIn = true
-                        }
-                    }
+                    viewModel.logIn(email: email, password: password)
                 }
 
-                if !errorMessage.isEmpty {
-                    Text("Error: \(errorMessage)")
+                if !viewModel.errorMessage.isEmpty {
+                    Text("Error: \(viewModel.errorMessage)")
                         .foregroundColor(.red)
                 }
             }
         }
         .padding()
-        .onAppear {
-            isSignedIn = Auth.auth().currentUser != nil
-        }
     }
 }
